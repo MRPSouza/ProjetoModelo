@@ -31,9 +31,9 @@ Este projeto é uma solução para quem deseja criar sites dinâmicos com suport
 3. Configure o servidor local usando o XAMPP. Certifique-se de que o Apache e MySQL estão rodando.
 
 4. Abra o navegador e acesse:
-   `http://localhost/projeto-modelo`
+   `http://localhost/ProjetoModelo/Host/public_html`
 
-5. Se estiver utilizando banco de dados, crie um banco com o nome `projeto_modelo` e importe as tabelas necessárias.
+5. Se estiver utilizando banco de dados, acesse a pasta `ProjetoModelo/Host/private/src/model` e importe os arquivos `*.sql` para criar as tabelas necessárias.
 
 ## Como Contribuir
 
@@ -45,9 +45,9 @@ Este projeto é uma solução para quem deseja criar sites dinâmicos com suport
 
 ## Licença
 
-Este projeto está sob a [Licença MIT](https://opensource.org/licenses/MIT).
+Este projeto está sob a [GPL-3.0 license](https://github.com/MRPSouza/ProjetoModelo?tab=GPL-3.0-1-ov-file).
 
 ## Contato
 
-- Seu Nome - [@seuTwitter](https://twitter.com/seuTwitter)
-- Email: seuemail@dominio.com
+- Matheus Souza
+- Email: contato@matheusrpsouza.com
