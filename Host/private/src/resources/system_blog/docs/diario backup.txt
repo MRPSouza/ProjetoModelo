@@ -1,0 +1,1744 @@
+DIÁRIO DE DESENVOLVIMENTO - SISTEMA DE BLOG
+==========================================
+
+VISÃO GERAL
+-----------
+Sistema de blog modular que pode ser ativado/desativado dinamicamente no sistema principal.
+
+OBJETIVOS PRINCIPAIS
+-------------------
+- Sistema totalmente independente
+- Fácil manutenção
+- Código limpo e bem documentado
+- Testes automatizados
+- Performance otimizada
+
+ESTRUTURA DE PASTAS
+------------------
+|-- config/          (Configurações do módulo)
+|-- src/             (Código fonte principal)
+|-- database/        (Migrações e seeds)
+|-- resources/       (Views, assets e traduções)
+|-- tests/           (Testes automatizados)
+|-- routes/          (Rotas do sistema)
+|-- docs/            (Documentação)
+
+REGISTRO DE DESENVOLVIMENTO
+--------------------------
+DIA 1 (Atual):
+[x] Criação da estrutura de pastas
+[x] Criação do diário de desenvolvimento
+[ ] Configuração inicial do composer.json
+
+REGISTRO DETALHADO DE DESENVOLVIMENTO
+-----------------------------------
+21/03/2024
+----------
+1. CRIAÇÃO DO INDEX.PHP
+   Arquivo: index.php
+   Objetivo: Teste inicial do ambiente
+   Código implementado:
+   - ini_set('display_errors', 1)        // Ativa exibição de erros
+   - error_reporting(E_ALL)              // Mostra todos os tipos de erro
+   - Echo básico para teste visual
+   
+   Como testar:
+   1. Acessar: http://localhost/ProjetoModelo/Host/private/src/resources/system_blog/
+   2. Deve aparecer:
+      - Título "Sistema de Blog"
+      - Mensagem "Teste inicial funcionando!"
+   
+   Possíveis problemas:
+   - Página em branco: Verificar permissões da pasta
+   - Erro 404: Verificar se o caminho está correto
+   - Erro 500: Verificar logs do Apache
+
+2. CRIAÇÃO DO DATABASE.PHP
+   Arquivo: config/database.php
+   Objetivo: Configuração e conexão com o banco de dados
+   
+   Implementado:
+   - Constantes de configuração do banco
+   - Prefixo 'blog_' para tabelas
+   - Função connectDB() usando PDO
+   - Charset utf8mb4 para suporte completo a Unicode
+   - Modo de erro PDO::ERRMODE_EXCEPTION
+   
+   Como testar:
+   1. Modificar index.php para incluir teste de conexão
+   2. Verificar se banco existe (projeto_modelo)
+   3. Conferir credenciais (usuário root sem senha - padrão XAMPP)
+   
+   Próximos passos:
+   - Criar arquivo de teste de conexão
+   - Preparar primeira migration para tabelas
+   
+   Observações:
+   - Usando PDO para maior segurança e port
+
+3. ATUALIZAÇÃO DO INDEX.PHP
+   Arquivo: index.php
+   Objetivo: Implementar teste de conexão com banco
+   
+   Alterações:
+   - Incluído require_once do database.php
+   - Adicionado bloco try/catch para teste de conexão
+   - Implementado teste visual de tabelas com prefixo blog_
+   
+   Como testar:
+   1. Acessar: http://localhost/ProjetoModelo/Host/private/src/resources/system_blog/
+   2. Verificar mensagens:
+      ✓ Verde: conexão OK
+      ✗ Vermelho: problema na conexão
+   
+   Possíveis mensagens de erro e soluções:
+   - "Could not find driver": Habilitar extensão PDO no php.ini
+   - "Access denied": Verificar usuário/senha do MySQL
+   - "Unknown database": Criar banco 'projeto_modelo'
+   
+   Próximos passos:
+   - Criar primeira migration para tabelas
+   - Implementar estrutura base das tabelas do blog
+
+4. CRIAÇÃO DO SCHEMA DO BANCO
+   Arquivo: database/initial_schema.sql
+   Objetivo: Criar estrutura inicial do banco de dados
+   
+   Tabelas criadas:
+   - blog_module_status: Controle de ativação do módulo
+   - blog_posts: Posts do blog
+   - blog_categories: Categorias
+   - blog_posts_categories: Relacionamento posts/categorias
+   - blog_comments: Comentários
+   
+   Características:
+   - Charset: utf8mb4 (suporte completo a emojis/unicode)
+   - Timestamps automáticos
+   - Chaves estrangeiras configuradas
+   - Soft delete não implementado ainda
+   
+   Como usar:
+   1. Abrir HeidiSQL
+   2. Conectar ao MySQL (geralmente localhost:3306)
+   3. Copiar e colar o conteúdo do SQL
+   4. Executar
+   
+   Próximos passos:
+   - Testar conexão novamente com index.php
+   - Deve mostrar as 5 tabelas criadas
+
+5. IMPLEMENTAÇÃO BÁSICA DE POSTS
+   
+   Arquivos criados:
+   - src/Models/Post.php: Classe para manipulação de posts
+   - index.php: Atualizado para listar posts
+   
+   Funcionalidades implementadas:
+   - Listagem de posts publicados
+   - Ordenação por data de criação
+   - Exibição de título, data e prévia do conteúdo
+   - Links para posts individuais
+   
+   Como testar:
+   1. Acessar: http://localhost/ProjetoModelo/Host/private/src/resources/system_blog/
+   2. Deve mostrar "Nenhum post publicado ainda"
+   
+   Próximos passos:
+   1. Criar post.php para visualização individual
+   2. Inserir alguns posts de teste no banco
+   3. Implementar paginação
+   
+   SQL para posts de teste:
+
+6. IMPLEMENTAÇÃO DA VISUALIZAÇÃO INDIVIDUAL DE POST
+   
+   Arquivo criado:
+   - post.php: Página de visualização individual
+   
+   Funcionalidades:
+   - Recupera post pelo slug da URL
+   - Exibe título, data e conteúdo completo
+   - Link para voltar à listagem
+   - Redirecionamento se post não existe
+   
+   Segurança implementada:
+   - Escape de HTML com htmlspecialchars()
+   - Validação de slug
+   - Verificação de post publicado
+   
+   Como testar:
+   1. Clicar em "Ler mais" na listagem
+   2. URL deve ser: .../blog/post.php?slug=primeiro-post
+   3. Deve mostrar o post completo
+   
+   Melhorias futuras:
+   - Adicionar meta tags
+   - Implementar sistema de comentários
+   - Adicionar compartilhamento social
+   - Mostrar posts relacionados
+
+7. IMPLEMENTAÇÃO DA ÁREA DE CRIAÇÃO DE POSTS
+   
+   Arquivos criados/modificados:
+   - src/Models/Post.php: Adicionado método createPost() e createSlug()
+   - admin/create.php: Formulário de criação de posts
+   
+   Funcionalidades:
+   - Formulário com título, conteúdo e status
+   - Geração automática de slug
+   - Validação básica dos campos
+   - Feedback visual de sucesso/erro
+   - Opção de salvar como rascunho ou publicar
+   
+   Como testar:
+   1. Acessar: .../blog/admin/create.php
+   2. Preencher o formulário
+   3. Salvar como rascunho ou publicado
+   4. Verificar na listagem (apenas publicados aparecem)
+   
+   Melhorias futuras:
+   - Adicionar autenticação
+   - Editor rico (WYSIWYG)
+   - Upload de imagens
+   - Preview do post
+
+8. ADIÇÃO DE LINK PARA ÁREA ADMINISTRATIVA
+   
+   Arquivo modificado:
+   - index.php: Adicionado link "Criar Post"
+   
+   Alterações:
+   - Botão fixo no canto superior direito
+   - Estilo consistente com o formulário de criação
+   - Link direto para create.php
+   
+   Como usar:
+   1. O botão "Criar Post" aparece no topo direito da listagem
+   2. Clique para acessar o formulário de criação
+   
+   Próximos passos sugeridos:
+   - Implementar autenticação
+   - Criar página de listagem de todos os posts (incluindo rascunhos)
+   - Adicionar opções de editar/excluir posts
+
+9. IMPLEMENTAÇÃO DO EDITOR WYSIWYG
+   
+   Alterações:
+   - Adicionado TinyMCE como editor
+   - Configurado para português do Brasil
+   - Habilitado recursos:
+     * Formatação de texto (negrito, itálico, etc)
+     * Cores de texto e fundo
+     * Listas ordenadas e não ordenadas
+     * Tabelas
+     * Upload de imagens
+     * Inserção de mídia
+     * Diferentes estilos de título
+   
+   Arquivos modificados:
+   - admin/create.php: Adicionado TinyMCE
+   - src/Models/Post.php: Permitir conteúdo HTML
+   - post.php: Renderizar HTML do conteúdo
+   
+   Próximos passos:
+   - Criar upload.php para gerenciar uploads de imagens
+   - Implementar limpeza de HTML para segurança
+   - Adicionar preview do post
+   - Criar biblioteca de mídia
+
+10. SUBSTITUIÇÃO DO EDITOR
+    
+    Alterações:
+    - Removido TinyMCE (requer API key)
+    - Implementado CKEditor 5 (gratuito)
+    - Configurado para português do Brasil
+    - Habilitado recursos:
+      * Formatação básica (negrito, itálico, etc)
+      * Listas
+      * Alinhamento
+      * Links
+      * Citações
+      * Tabelas
+    
+    Benefícios:
+    - Sem necessidade de API key
+    - Interface mais limpa
+    - Carregamento mais rápido
+    - Suporte nativo a português
+    
+    Próximos passos:
+    - Implementar upload de imagens
+    - Adicionar mais opções de formatação
+    - Criar preview do post
+
+11. IMPLEMENTAÇÃO DE EDITOR PRÓPRIO
+    
+    Novo desenvolvimento:
+    - Editor customizado usando JavaScript puro
+    - Sem dependências externas
+    
+    Funcionalidades implementadas:
+    - Negrito (B)
+    - Itálico (I)
+    - Sublinhado (U)
+    - Tachado (S)
+    - Títulos (H2)
+    - Links (🔗)
+    - Lista com marcadores (•)
+    - Lista numerada (1.)
+    
+    Técnicas utilizadas:
+    - contenteditable="true" para área editável
+    - document.execCommand() para formatação
+    - HTML puro para toolbar
+    - JavaScript vanilla para comandos
+    
+    Próximos passos:
+    1. Adicionar mais formatações:
+       - Alinhamento
+       - Cores
+       - Tamanhos de fonte
+    2. Implementar upload de imagens
+    3. Adicionar tabelas
+    4. Criar preview em tempo real
+
+12. MELHORIAS NO EDITOR PRÓPRIO
+    
+    Alterações Visuais:
+    - Adicionado Font Awesome para ícones
+    - Interface mais moderna e organizada
+    - Tooltips nos botões
+    - Grupos de ferramentas separados
+    - Feedback visual nos botões (hover/active)
+    
+    Novas Funcionalidades:
+    1. Formatação de Texto
+       - Seletor de estilos (h1-h4, p)
+       - Alinhamento (esquerda, centro, direita, justificado)
+       - Cores de texto e fundo com color picker
+    
+    2. Elementos
+       - Tabelas com número personalizado de linhas/colunas
+       - Listas ordenadas e não ordenadas
+       - Links
+    
+    Técnicas Implementadas:
+    - Uso de flexbox para layout
+    - Sistema de tooltips personalizado
+    - Organização por grupos de ferramentas
+    - Estilização consistente
+    
+    Próximas Implementações Planejadas:
+    1. Upload e Gerenciamento de Imagens
+       - Botão de upload
+       - Preview de imagem
+       - Redimensionamento
+       - Biblioteca de mídia
+    
+    2. Sistema de Histórico
+       - Botões Desfazer/Refazer
+       - Atalhos de teclado (Ctrl+Z, Ctrl+Y)
+    
+    3. Visualização
+       - Preview em tempo real
+       - Modo de código fonte HTML
+       - Toggle de visualização
+    
+    4. Elementos Adicionais
+       - Citações (blockquote)
+       - Código (pre/code)
+       - Linha horizontal
+       - Emojis
+    
+    5. Melhorias de UX
+       - Atalhos de teclado
+       - Drag and drop de imagens
+       - Auto-save
+
+13. IMPLEMENTAÇÃO DO PREVIEW EM TEMPO REAL
+    
+    Funcionalidades Adicionadas:
+    - Preview em tempo real do conteúdo
+    - Layout responsivo (aparece apenas em telas >= 1200px)
+    - Botão de toggle para mostrar/esconder
+    - Atualização automática ao digitar
+    
+    Características:
+    1. Layout
+       - Split view em telas grandes
+       - Editor e preview lado a lado
+       - Responsivo (adapta-se ao tamanho da tela)
+    
+    2. Preview
+       - Título indicativo
+       - Estilização própria
+       - Scroll independente
+       - Formatação consistente
+    
+    3. Interatividade
+       - Toggle via botão fixo
+       - Atualização em tempo real
+       - Preservação do estado
+    
+    4. Performance
+       - Debounce no resize
+       - Otimização de reflow
+    
+    Próximas Melhorias Planejadas:
+    - Sincronização de scroll
+    - Highlight da seção sendo editada
+    - Modo de preview em tela cheia
+    - Opção de temas no preview
+
+14. UNIFICAÇÃO DOS ESTILOS DE VISUALIZAÇÃO
+    
+    Arquivos Criados/Modificados:
+    - assets/css/blog-post.css: Estilos compartilhados
+    - post.php
+
+15. IMPLEMENTAÇÃO DO SISTEMA DE IMAGENS
+    
+    Arquivos Criados:
+    - admin/upload.php: Handler de upload
+    - uploads/images/: Diretório para imagens
+    
+    Funcionalidades:
+    1. Upload de Imagens
+       - Drag & Drop
+       - Seleção por clique
+       - Preview antes de inserir
+       - Validação de tipo e tamanho
+       
+    2. Organização
+       - Arquivos organizados por ano/mês
+       - Nomes únicos para evitar conflitos
+       - Estrutura de pastas automática
+    
+    3. Customização
+       - Alinhamento (esquerda, centro, direita)
+       - Redimensionamento (25%, 50%, 75%, 100%)
+       - Preview em tempo real
+    
+    Segurança:
+    - Validação de tipos de arquivo
+    - Limite de tamanho (5MB)
+    - Nomes de arquivo seguros
+    
+    Melhorias Futuras:
+    - Biblioteca de mídia
+    - Recorte de imagens
+    - Otimização automática
+    - Thumbnails
+    - Lightbox na visualização
+
+16. CORREÇÃO DO SISTEMA DE UPLOAD
+    
+    Alterações:
+    - Adicionado config/paths.php para centralizar caminhos
+    - Melhorado sistema de logs para debug
+    - Adicionado feedback visual durante upload
+    - Verificação automática de diretórios
+    
+    Correções:
+    - Caminhos absolutos vs relativos
+    - Permissões de diretório
+    - Feedback de erros mais detalhado
+    - Validação de tipos de arquivo
+    
+    Como testar:
+    1. Verificar se pasta uploads existe e tem permissão
+    2. Tentar upload de imagem < 5MB
+    3. Verificar logs de erro se falhar
+    4. Confirmar URL correta na preview
+
+17. CORREÇÃO DO SISTEMA DE UPLOAD NO WINDOWS
+    
+    Problemas Identificados:
+    - Comando chmod não funciona no Windows
+    - Permissões de diretório diferentes
+    - Upload funciona mas imagem não aparece no editor
+    
+    Correções Aplicadas:
+    1. Sistema de Arquivos
+       - Adaptação para permissões Windows
+       - Uso de icacls para definir permissões
+       - Verificações de gravação em diretórios
+    
+    2. Upload
+       - Logs detalhados de erro
+       - Verificação de arquivo temporário
+       - Validação de diretório destino
+    
+    Problema Atual:
+    - Imagem aparece no preview do upload
+    - Não aparece no editor nem no Preview principal
+    
+    Próximos Passos:
+    1. Corrigir inserção da imagem no editor
+    2. Verificar caminho correto das URLs
+    3. Implementar feedback visual do processo
+
+18. IMPLEMENTAÇÃO DE PERSONALIZAÇÃO DE FUNDO
+    
+    Funcionalidades Adicionadas:
+    1. Seletor de Fundo
+       - Cor sólida com color picker
+       - Gradiente com duas cores
+       - Direções de gradiente (vertical, horizontal, diagonal)
+    
+    2. Preview em Tempo Real
+       - Visualização instantânea das mudanças
+       - Preview em área dedicada
+    
+    3. Persistência
+       - Salvamento em localStorage
+       - Carregamento automático nas páginas
+    
+    4. Interface
+       - Modal dedicado para configurações
+       - Opções organizadas e intuitivas
+       - Botão na toolbar do editor
+    
+    Arquivos Modificados:
+    - admin/create.php: Adicionado seletor de fundo
+    - post.php: Carregamento do background salvo
+    
+    Melhorias Futuras:
+    - Salvar configuração no banco de dados
+    - Mais padrões de gradiente
+    - Opções de textura/padrões
+    - Imagem de fundo
+
+19. IMPLEMENTAÇÃO DE ESTILIZAÇÃO DE TÍTULO
+    
+    Funcionalidades Adicionadas:
+    1. Editor de Título
+       - Formatação rica (negrito, itálico)
+       - Seletor de cores
+       - Tamanhos predefinidos
+       - Editor visual WYSIWYG
+    
+    2. Toolbar Dedicada
+       - Botões de formatação
+       - Color picker
+       - Dropdown de tamanhos
+       - Feedback visual de estados
+    
+    3. Preview em Tempo Real
+       - Sincronização com preview principal
+       - Atualização instantânea
+       - Preservação de estilos
+    
+    4. Persistência
+       - Salvamento do HTML formatado
+       - Preservação de estilos ao
+
+20. PERSISTÊNCIA E SINCRONIZAÇÃO DE ESTILOS
+    
+    Alterações no Banco:
+    - Adicionadas colunas title_styles e background_styles
+    - Separação entre conteúdo e apresentação
+    
+    Implementações:
+    1. Salvamento de Estilos
+       - Estilos do título em JSON
+       - Cores de fundo
+       - Gradientes
+    
+    2. Sincronização
+       - Cards na página principal
+       - Página de visualização
+       - Preview do editor
+    
+    3. Separação de Conteúdo
+       - Título puro para SEO
+       - HTML estilizado para apresentação
+       - Background styles para cards
+    
+    4. Melhorias Visuais
+       - Cards refletem cor de fundo
+       - Títulos mantêm formatação
+       - Consistência visual
+    
+    Próximas Melhorias:
+    - Cache de estilos
+    - Temas predefinidos
+    - Animações de transição
+    - Customização de cards
+
+21. CORREÇÃO DA PÁGINA DE VISUALIZAÇÃO
+    
+    Problemas Corrigidos:
+    - Erro de json_decode na página do post
+    - Tratamento de estilos nulos
+    - Consistência na exibição
+    
+    Alterações:
+    1. Tratamento de Dados
+       - Verificação de valores nulos
+       - Fallback para estilos padrão
+       - Escape HTML apropriado
+    
+    2. Estrutura
+       - Reorganização do código
+       - Separação de lógica e apresentação
+       - Melhor legibilidade
+    
+    3. Segurança
+       - Escape de saída HTML
+       - Validação de dados
+       - Proteção contra XSS
+    
+    Melhorias:
+    - Código mais seguro
+    - Sem warnings deprecated
+    - Exibição consistente
+    
+    Próximos Passos:
+    - Implementar cache de estilos
+    - Adicionar meta tags
+    - Melhorar SEO
+
+24. CORREÇÃO DA PERSISTÊNCIA DE GRADIENTES
+    
+    Problemas Corrigidos:
+    - Gradientes não sendo salvos
+    - Exibição incorreta nos cards
+    - Fundo não cobrindo página inteira
+    
+    Alterações:
+    1. Formulário
+       - Garantia de salvamento do gradiente
+       - Persistência no submit
+       - Validação de valores
+    
+    2. Exibição
+       - Suporte a gradientes nos cards
+       - Cobertura total na página
+       - Fallback para cor padrão
+    
+    3. Banco de Dados
+       - Garantia de não-nulo
+       - Valor padrão definido
+       - Persistência correta
+    
+    Melhorias:
+    - Consistência visual
+    - Gradientes funcionais
+    - Cobertura total da página
+    
+    Próximos Passos:
+    - Preview de gradientes
+    - Biblioteca de gradientes
+    - Animações de transição
+
+25. CORREÇÃO DO SISTEMA DE PUBLICAÇÃO
+    
+    Problemas Identificados:
+    - Posts não sendo salvos
+    - Falta de validação
+    - Ausência de logs
+    
+    Alterações:
+    1. Formulário
+       - Validação client-side
+       - Preenchimento automático
+       - Prevenção de envio vazio
+    
+    2. Controller
+       - Logs detalhados
+       - Tratamento de erros
+       - Feedback visual
+    
+    3. Model
+       - Validação de dados
+       - Logs de execução
+       - Tratamento de exceções
+    
+    4. Interface
+       - Mensagens de erro
+       - Feedback visual
+       - Prevenção de erros
+    
+    Melhorias:
+    - Sistema mais robusto
+    - Rastreamento de erros
+    - Feedback ao usuário
+    
+    Próximos Passos:
+    - Validação mais completa
+    - Sistema de rascunhos
+    - Preview antes de publicar
+
+26. CRIAÇÃO DA PÁGINA DE ADMINISTRAÇÃO
+    
+    Implementações:
+    1. Interface Admin
+       - Lista de posts
+       - Botão novo post
+       - Ações rápidas
+       - Feedback visual
+    
+    2. Funcionalidades
+       - Visualização de posts
+       - Status dos posts
+       - Links de ação
+       - Confirmação de exclusão
+    
+    3. Design
+       - Layout responsivo
+       - Tabela estilizada
+       - Ícones intuitivos
+       - Mensagens de feedback
+    
+    4. UX
+       - Navegação clara
+       - Ações confirmadas
+       - Status visual
+       - Links diretos
+    
+    Melhorias Futuras:
+    - Paginação
+    - Filtros de busca
+    - Ordenação de colunas
+    - Ações em lote
+
+LEMBRETES IMPORTANTES
+-------------------
+- Manter backup do diário
+- Sempre testar no navegador após cada alteração
+- Usar var_dump() para debug
+- Verificar logs do Apache em caso de erro
+  (Localização padrão XAMPP: xampp/apache/logs/error.log)
+
+PRÓXIMOS PASSOS
+--------------
+1. Criar composer.json
+2. Configurar autoload
+3. Criar estrutura básica de classes
+4. Implementar sistema de rotas
+5. Criar migrations iniciais
+
+STACK TECNOLÓGICA
+----------------
+- PHP 8.1+
+- MySQL/MariaDB
+- Composer para gerenciamento de dependências
+- PHPUnit para testes
+
+CONVENÇÕES
+----------
+- PSR-4 para autoload
+- PSR-12 para estilo de código
+- Documentação em português
+- Commits em português
+
+ESTRATÉGIA DE DESENVOLVIMENTO SIMPLIFICADA
+----------------------------------------
+1. AMBIENTE
+   - XAMPP (Apache + MySQL)
+   - PHP 8+
+   - Pasta do módulo dentro de htdocs/
+
+2. ESTRUTURA INICIAL PARA TESTE
+   |-- index.php        (Ponto de entrada para testes)
+   |-- config/
+       |-- config.php   (Configurações básicas)
+   |-- src/
+       |-- init.php     (Carregamento das classes)
+
+3. COMO TESTAR
+   - Acessar http://localhost/seu_projeto/blog/
+   - Usar var_dump() e die() para debug
+   - Arquivo de log simples
+
+4. ORDEM DE DESENVOLVIMENTO
+   1ª Fase - Base
+   - Arquivo index.php com teste básico
+   - Sistema simples de rotas
+   -> TESTE: Ver "Ol Mundo" no navegador
+
+   2ª Fase - Database
+   - Conexão MySQL simples
+   - Queries básicas
+   -> TESTE: Listar dados do banco
+
+   3ª Fase - Frontend
+   - Templates simples
+   - Lista de posts
+   -> TESTE: Ver layout no navegador
+
+TESTE DE IMPLEMENTAÇÃO (21/03/2024)
+---------------------------------
+✓ Conexão com banco estabelecida
+✓ Tabelas criadas com sucesso:
+  - blog_categories
+  - blog_comments
+  - blog_module_status
+  - blog_posts
+  - blog_posts_categories
+✓ Sistema consegue listar todas as tabelas
+
+PRÓXIMOS PASSOS POSSÍVEIS:
+1. Implementar classe Model base
+2. Configurar sistema de rotas
+3. Criar template básico
+
+29. CORREÇÃO DE DOCUMENTAÇÃO - NOME DO BANCO DE DADOS
+    
+    Problema Identificado:
+    - Inconsistência no nome do banco de dados
+    - Alterações não documentadas
+    - Confusão entre 'blog' e 'system_blog'
+    
+    Estado Atual:
+    - Verificar qual nome está realmente em uso no sistema
+    - Documentar a decisão final
+    - Garantir consistência em todos os arquivos
+    
+    Próximos Passos:
+    1. Verificar nome atual no banco
+    2. Padronizar em todos os arquivos
+    3. Documentar claramente a decisão
+    4. Manter registro de todas as alterações
+
+30. CORREÇÃO DO NOME DO BANCO DE DADOS
+    
+    Identificação Correta:
+    - Nome do banco: projeto_modelo
+    - Tabelas com prefixo 'blog_':
+      * blog_categories
+      * blog_comments
+      * blog_module_status
+      * blog_posts
+      * blog_posts_categories
+    
+    Correção:
+    - Atualizar arquivo de configuração
+    - Documentar estrutura correta
+    - Manter consistência com o sistema existente
+
+31. CORREÇÃO DE CONEXÃO NO MODEL POST
+    
+    Problema Identificado:
+    - Tentativa de usar função connectDB() inexistente
+    - Model espera conexão via construtor
+    - Inconsistência entre implementações
+    
+    Correção:
+    - Remover chamada à connectDB()
+    - Usar conexão injetada via construtor
+    - Garantir que PDO é passado corretamente
+
+33. IMPLEMENTAÇÃO DE BUSCA POR SLUG
+    
+    Implementação:
+    - Método getPostBySlug()
+    - Busca post publicado por slug
+    - Retorna dados completos do post
+    
+    Detalhes:
+    - Query preparada para segurança
+    - Filtro por status published
+    - Retorno único via fetch()
+    
+    Próximos Passos:
+    - Cache de posts populares
+    - Contagem de visualizações
+    - Posts relacionados
+
+34. IMPLEMENTAÇÃO DA EDIÇÃO DE POSTS
+    
+    Implementação:
+    - Página de edição (edit.php)
+    - Método getPostById()
+    - Método updatePost()
+    - Formulário com estilos
+    
+    Detalhes:
+    - Editor visual
+    - Preservação de estilos
+    - Validação de dados
+    - Feedback visual
+    
+    Próximos Passos:
+    - Preview de alterações
+    - Histórico de revisões
+    - Autosave
+
+35. ATUALIZAÇÃO DO SISTEMA DE EDIÇÃO
+    
+    Alterações no Banco:
+    - Adicionado campo title_styles (TEXT)
+    - Adicionado campo background_styles (VARCHAR)
+    
+    Padronização de Arquivos:
+    - Copiar funcionalidades do create.php para edit.php
+    - Manter consistência de estilos e scripts
+    - Garantir preview em tempo real
+    
+    Próximos Passos:
+    - Testar edição com novos campos
+    - Verificar persistência dos estilos
+    - Documentar novas funcionalidades
+
+36. CORREÇÃO DO SISTEMA DE EDIÇÃO
+    
+    Correções:
+    - Removida tentativa de alteração do banco
+    - Foco na padronização do edit.php
+    
+    Implementações no edit.php:
+    - Preview em tempo real
+    - Editor visual completo
+    - Upload de imagens
+    - Configuração de background
+    - Estilização do título
+    
+    Próximos Passos:
+    - Testar todas as funcionalidades
+    - Verificar preview
+    - Garantir persistência dos dados
+
+37. CORREÇÃO DE CONEXÃO NO INDEX
+    
+    Problema:
+    - Construtor do Post sem conexão PDO
+    - Erro de ArgumentCountError
+    
+    Correção:
+    - Incluir arquivo database.php
+    - Passar $pdo no construtor
+    - Adicionar try/catch
+    
+    Prximos Passos:
+    - Verificar listagem de posts
+    - Testar paginação
+    - Implementar filtros
+
+38. MILESTONE: SISTEMA BASE FUNCIONANDO
+    
+    Conquistas:
+    - Conexão com banco estável
+    - CRUD de posts completo
+    - Interface administrativa
+    - Visualização pública
+    - Estilos personalizados
+    
+    Funcionalidades Implementadas:
+    - Criação de posts
+    - Edição com preview
+    - Listagem organizada
+    - Links de navegação
+    - Tratamento de erros
+    
+    Próximos Objetivos:
+    - Melhorar UX/UI
+    - Implementar categorias
+    - Sistema de comentários
+    - Otimização de performance
+    - Backup automático
+
+39. CORREÇÃO DO CREATE.PHP
+    
+    Problema:
+    - Mesmo erro de conexão do index.php
+    - Post::__construct() sem parâmetro PDO
+    
+    Correção:
+    - Incluir database.php
+    - Passar $pdo no construtor
+    - Manter logs de erro
+    
+    Próximos Passos:
+    - Testar criação de posts
+    - Verificar upload de imagens
+    - Validar estilos salvos
+
+40. CORREÇÃO DO SISTEMA DE EDIÇÃO
+    
+    Problemas Identificados:
+    - POST não processado
+    - Interface inconsistente
+    - Edição fragmentada
+    
+    Correções:
+    - Processamento do formulário
+    - Interface rica igual ao create
+    - Preview em tempo real
+    - Salvamento completo
+    
+    Próximos Passos:
+    - Testar edição completa
+    - Verificar estilos
+    - Validar dados
+
+41. CORREÇÃO DE BUGS NA EDIÇÃO
+    
+    Problemas Corrigidos:
+    - Update apagando dados existentes
+    - Background fragmentado
+    
+    Soluções:
+    - Mesclar dados antes do update
+    - Aplicar background no container
+    - Preservar dados existentes
+    
+    Próximos Passos:
+    - Testar persistência
+    - Verificar estilos
+    - Validar dados
+
+42. RECONSTRUÇÃO DO EDIT.PHP
+    
+    Problema Identificado:
+    - Interface fragmentada
+    - Edição linha por linha
+    - Falta de recursos visuais
+    - Inconsistência com create.php
+    
+    Solução:
+    - Recriação completa baseada no create.php
+    - Editor visual completo
+    - Preview em tempo real
+    - Toolbar de formataão
+    - Upload de imagens
+    - Configuração de background
+    - Estilização do título
+    
+    Melhorias Implementadas:
+    - Interface unificada
+    - Mesmas funcionalidades do create
+    - Preview lado a lado
+    - Modais de configuração
+    - Scripts de interação
+    
+    Próximos Passos:
+    - Testar todas as funcionalidades
+    - Verificar persistência dos dados
+    - Validar formatações
+    - Garantir consistência de estilos
+
+43. RECRIAÇÃO COMPLETA DO EDIT.PHP
+    
+    Ação:
+    - Arquivo completamente limpo
+    - Recriado do zero
+    - Baseado no create.php mas com código próprio
+    
+    Nova Estrutura:
+    - Editor visual completo
+    - Toolbar unificada
+    - Preview em tempo real
+    - Modais funcionais
+    - Campos ocultos para dados
+    
+    Funcionalidades:
+    - Edição completa
+    - Editor rico para conteúdo
+    - Upload de imagens
+    - Configuração de background
+    - Preview lado a lado
+    
+    Próximos Passos:
+    - Testar todas as funcionalidades
+    - Verificar salvamento
+    - Validar formatação
+
+44. DUPLICAÇÃO DO CREATE.PHP PARA EDIT.PHP
+    
+    Ação:
+    - Apagar completamente edit.php
+    - Duplicar create.php
+    - Ajustar apenas o necessário para edição
+    
+    Ajustes Necessários:
+    - Título da página
+    - Busca do post existente
+    - Método de salvamento (update vs create)
+    - Carregamento dos dados existentes
+    
+    Mantido do Create:
+    - Toda a estrutura HTML
+    - Todo o CSS
+    - Todo o JavaScript
+    - Todos os modais
+    - Todo o sistema de preview
+
+45. UNIFICAÇÃO CREATE/EDIT
+    
+    Objetivo:
+    - Um único arquivo para criar e editar posts
+    - Detectar automaticamente a operação
+    - Manter todas as funcionalidades
+    
+    Lógica:
+    - Se tem ID na URL = Edição
+    - Se não tem ID = Criação
+    - Interface idêntica
+    - Apenas muda textos e ação
+
+46. CORREÇÃO DO EDITOR NO EDIT.PHP
+    
+    Problema Identificado:
+    - Editor fragmentado em múltiplas linhas
+    - Áreas de texto desaparecendo
+    - Comportamento inconsistente
+    
+    Solução:
+    - Duplicar EXATAMENTE o editor do create.php
+    - Uma única área editável para título
+    - Uma única área editável para conteúdo
+    - Manter toda a estrutura do create.php
+    
+    Ação:
+    - Remover código atual do edit.php
+    - Copiar 100% do create.php
+    - Ajustar apenas para carregar dados existentes
+
+47. RECRIAÇÃO DO EDIT.PHP BASEADO NO CREATE.PHP
+    
+    Ação:
+    - Duplicação exata do create.php
+    - Mantida toda a estrutura visual
+    - Mantido todo o comportamento
+    
+    Alterações Mínimas:
+    - Verificação de ID para edição
+    - Carregamento de dados existentes
+    - Textos dinâmicos (Criar/Editar)
+    - Método de salvamento
+    
+    Resultado:
+    - Interface idêntica ao create
+    - Mesma experiência de edição
+    - Preview funcionando igual
+
+48. CORREÇÃO DO MÉTODO UPDATE
+    
+    Problema:
+    - UPDATE não estava funcionando
+    - Dados não persistiam no banco
+    
+    Solução:
+    - Implementação correta do UPDATE
+    - Prepared statement com todos os campos
+    - Condição WHERE por ID
+    - Log de erros
+    
+    SQL:
+    - UPDATE blog_posts
+    - SET para cada coluna
+    - Valores via bind params
+    - WHERE id = :id
+
+49. CORREÇÃO DO FORMULÁRIO NO EDIT.PHP
+    
+    Problema:
+    - Dados não chegando corretamente para o UPDATE
+    - Formulário não estruturado adequadamente
+    
+    Solução:
+    - Garantir que o form envia todos os campos
+    - Debug dos dados enviados
+    - Estrutura correta do formulário
+
+50. REVERSÃO DE ALTERAÇÕES DESNECESSÁRIAS
+    
+    Ação:
+    - Revertido mudanças no Post.php
+    - Mantido apenas o essencial
+    - Removido código de debug extra
+    
+    Foco:
+    - Correção deve ser no edit.php
+    - Simplificação do código
+    - Manter apenas o necessário
+
+51. CORREÇÃO DO ENVIO DO FORMULÁRIO
+    
+    Problema:
+    - Botão atualizar não funcionando
+    - Formulário não sendo enviado
+    
+    Solução:
+    - Implementação correta do submitForm
+    - Captura dos dados do editor
+    - Atualização dos campos hidden
+    - Submit manual do form
+    
+    Próximos Passos:
+    - Testar envio do formulário
+    - Verificar dados no servidor
+    - Confirmar atualização no banco
+
+52. MELHORIAS VISUAIS E DELETE
+    
+    Melhorias UI/UX:
+    - Header unificado
+    - Mensagens de feedback
+    - Confirmações de ações
+    - Cores consistentes
+    - Ícones intuitivos
+    
+    Novo arquivo:
+    - delete.php com confirmação
+    - Tratamento de erros
+    - Redirecionamento seguro
+    
+    Padronização:
+    - Estilos compartilhados
+    - Comportamentos consistentes
+    - Mensagens amigáveis
+
+53. IMPLEMENTAÇÃO DO MENU DESENVOLVEDOR
+    
+    Novo Componente:
+    - Menu flutuante
+    - Acesso rápido a todas as páginas
+    - Preparado para controle de acesso
+    - Visual moderno e intuitivo
+    
+    Funcionalidades:
+    - Toggle de visibilidade
+    - Links para todas as páginas
+    - Seções organizadas
+    - Ícones intuitivos
+    
+    Próximos Passos:
+    - Integrar com sistema de login
+    - Adicionar mais ferramentas
+    - Implementar debug tools
+
+56. CORREÇÕES E MELHORIAS VISUAIS
+    
+    Problemas:
+    - Caminho incorreto do dev-menu
+    - Layout básico do index
+    - Posts sem estilização
+    
+    Soluções:
+    - Corrigir caminhos
+    - Adicionar CSS
+    - Melhorar apresentação
+
+57. CORREÇÃO DE SLUG DUPLICADO
+    
+    Problema:
+    - Erro de chave duplicada no slug
+    - SQLSTATE[23000]: Integrity constraint
+    
+    Solução:
+    - Geração automática de slug
+    - Verificação de unicidade
+    - Adição de contador se necessário
+    
+    Melhorias:
+    - Tratamento de caracteres especiais
+    - Validação antes de inserir
+    - Log de erros
+
+58. DEBUG DO PROCESSO DE PUBLICAÇÃO
+    
+    Ações:
+    - Ativado display_errors
+    - Adicionado var_dump dos dados
+    - Debug no JavaScript
+    - Verificação dos campos
+    
+    Verificações:
+    - Dados do POST
+    - Campos do formulário
+    - Evento de submit
+    - Campos hidden
+
+59. RESTAURAÇÃO DO CREATE.PHP
+    
+    Ações:
+    - Restaurado arquivo completo
+    - Mantido sistema de debug
+    - Editor visual completo
+    - Todas as funcionalidades
+    
+    Componentes:
+    - Editor de título
+    - Editor de conteúdo
+    - Toolbar de formatação
+    - Preview
+    - Formulário oculto
+
+60. CORREÇÃO DO SISTEMA DE PUBLICAÇÃO
+    
+    Problema Identificado:
+    - Campo 'slug' obrigatório não estava sendo preenchido
+    - Erro de constraint no banco
+    
+    Solução:
+    - Implementação de ge
+
+61. CORREÇÃO DA LISTAGEM DE POSTS
+    
+    Problema:
+    - Posts salvos não aparecem na listagem
+    - Dados existem no banco
+    
+    Verificações:
+    - Query de listagem
+    - Conexão com banco
+    - Exibição dos dados
+    
+    Melhorias:
+    - Ordenação por data
+    - Mensagem quando vazio
+    - Formatação de data
+    - Debug de dados
+
+62. IMPLEMENTAÇÃO DE STATUS DOS POSTS
+    
+    Alterações:
+    - Novo campo status na tabela
+    - Toggle de publicação
+    - Filtro no front-end
+    
+    Features:
+    - Botão de toggle rápido
+    - Visual diferenciado por status
+    - Atualização AJAX (próxima etapa)
+    
+    Próximos Passos:
+    - Adicionar AJAX para toggle
+    - Melhorar feedback visual
+    - Adicionar filtros na listagem
+
+63. ATUALIZAÇÃO DO SISTEMA DE STATUS
+    
+    1. Alterações no Banco:
+    - Verificar se coluna status existe
+    - Adicionar se não existir
+    - Atualizar ENUM com todos os status
+    
+    2. Verificar Posts Existentes:
+    - Definir status padrão
+    - Migrar dados existentes
+    
+    3. Sequência de Execução:
+    - Primeiro: Alterações no banco
+    - Segundo: Atualizar Model
+    - Terceiro: Atualizar interface
+
+64. CORREÇÃO DE CAMINHOS E POST.PHP
+    
+    Problema:
+    - Erro no include do dev-menu
+    - Caminho incorreto
+    
+    Solução:
+    - Corrigir caminhos relativos
+    - Estruturar post.php corretamente
+    - Adicionar estilos para post único
+    
+    Melhorias:
+    - Layout para post completo
+    - Meta informações
+    - Navegação
+
+65. CORREÇÃO DA EXIBIÇÃO DO POST
+    
+    Problemas:
+    - Título não aparece
+    - Conteúdo não aparece
+    - Estilos não aplicados
+    
+    Soluções:
+    - Debug da query do post
+    - Aplicação correta dos estilos
+    - Estrutura HTML adequada
+    
+    Verificações:
+    - Dados do banco
+    - Estilos salvos
+    - Caminho dos arquivos
+
+66. MODERNIZAÇÃO DO EDITOR
+    
+    Implementações:
+    - Integração com Bootstrap 5.3.3
+    - Sistema de CDN links centralizado
+    - Tooltips nos botões de ação
+    - Layout responsivo e moderno
+    
+    Estrutura Visual:
+    - Navbar escura com navegação
+    - Toolbar fixa com grupos de botões
+    - Editor principal com título e conteúdo
+    - Sidebar com configurações
+    - Preview em card Bootstrap
+    
+    Melhorias de UX:
+    - Feedback visual nos botões
+    - Placeholders informativos
+    - Tooltips para ajuda
+    - Grupos de botões organizados
+    - Cores e espaçamentos consistentes
+    
+    Arquivos Criados/Modificados:
+    - includes/cdn_links.php (novo)
+    - admin/create.php (atualizado)
+    - admin/edit.php (pendente atualização)
+    
+    Próximos Passos:
+    1. Replicar layout para edit.php
+    2. Implementar autosave
+    3. Adicionar mais opções de formatação
+    4. Melhorar preview em tempo real
+    
+    Dependências:
+    - Bootstrap 5.3.3
+    - Popper.js 2.11.8
+    - Font Awesome 5.15.3
+    - Google Fonts
+    
+    Observações:
+    - Sistema de CDN facilita manutenção
+    - Layout mais profissional e intuitivo
+    - Base preparada para expansão
+    - Necessário testar em diferentes navegadores
+
+67. APRIMORAMENTO DO LAYOUT
+    
+    Melhorias:
+    - Editor em tela cheia (100vh)
+    - Botões de ação no topo
+    - Sidebar mais elegante com cards
+    - Preview em modal
+    - Layout padronizado
+    
+    Elementos Reorganizados:
+    - Botão publicar movido para topo
+    - Configurações em cards temáticos
+    - Ícones adicionados aos títulos
+    - Preview em modal Bootstrap
+    
+    Estilo:
+    - Cores consistentes
+    - Sombras suaves
+    - Espaçamento adequado
+    - Visual mais profissional
+    
+    Próximos Passos:
+    1. Replicar estilo para outras páginas
+    2. Adicionar mais opções de formatação
+    3. Implementar autosave
+    4. Melhorar responsividade
+
+68. REFINAMENTO DA INTERFACE
+    
+    Correções:
+    - Removido botão duplicado de publicar
+    - Sidebar reorganizada e simplificada
+    - Layout mais limpo e consistente
+    
+    Melhorias:
+    - Header fixo com ações principais
+    - Seções da sidebar com bordas
+    - Seletores de cor mais compactos
+    - Tipografia melhorada
+    
+    Organização:
+    - Agrupamento lógico de configurações
+    - Hierarquia visual mais clara
+    - Espaçamento otimizado
+    
+    Próximos Passos:
+    1. Implementar salvamento automático
+    2. Adicionar mais opções de formatação
+    3. Melhorar feedback visual das ações
+    4. Implementar sistema de rascunhos
+
+69. MELHORIAS DE UX/UI NO EDITOR
+    
+    Ajustes Visuais:
+    - Bordas tracejadas para áreas editáveis
+    - Labels claros para título e conteúdo
+    - Placeholders mais descritivos
+    - Feedback visual no focus
+    
+    UX:
+    - Áreas de edição claramente definidas
+    - Transições suaves
+    - Indicadores visuais de interatividade
+    - Hierarquia visual melhorada
+    
+    Melhorias:
+    - Tamanho de fonte adequado
+    - Espaçamento otimizado
+    - Contraste apropriado
+    - Feedback visual consistente
+    
+    Próximos Passos:
+    1. Testar com usuários
+    2. Ajustar tamanhos conforme feedback
+    3. Adicionar dicas de uso
+    4. Implementar shortcuts
+
+70. CORREÇÃO DA FORMATAÇÃO DO TÍTULO
+    
+    Problema:
+    - Título perdia formatação ao salvar
+    - Apenas texto puro era mantido
+    
+    Solução:
+    - Usar innerHTML ao invés de innerText
+    - Ajustar Model para salvar HTML
+    - Manter formatação no preview
+    
+    Alterações:
+    - JavaScript atualizado
+    - Model modificado
+    - Preview corrigido
+    
+    Observações:
+    - Slug ainda usa texto puro
+    - Formatação mantida no banco
+    - Preview mostra corretamente
+
+71. CORREÇÃO DAS FUNCIONALIDADES DO EDITOR
+    
+    Problemas Corrigidos:
+    - Botões de formatação não funcionavam
+    - Preview não funcionava
+    - Publicação não funcionava
+    
+    Implementações:
+    - Formatação de texto com execCommand
+    - Preview em modal Bootstrap
+    - Validação de formulário
+    - Estado ativo dos botões
+    
+    Melhorias:
+    - Feedback visual dos botões
+    - Validação melhorada
+    - Preview mais preciso
+    - Manutenção do foco
+    
+    Próximos Passos:
+    1. Adicionar mais opções de formatação
+    2. Implementar undo/redo
+    3. Adicionar shortcuts
+    4. Melhorar feedback de salvamento
+
+72. CORREÇÃO DO FORMULÁRIO DE PUBLICAÇÃO
+    
+    Problemas Corrigidos:
+    - Formulário não enviava dados
+    - Campos hidden não atualizados
+    - Falta de validação no servidor
+    
+    Implementações:
+    - Formulário reestruturado
+    - Validação client-side
+    - Processamento server-side
+    - Debug para rastreamento
+    
+    Melhorias:
+    - Feedback de erros
+    - Validação completa
+    - Redirecionamento após sucesso
+    - Log de erros
+    
+    Próximos Passos:
+    1. Adicionar feedback visual
+    2. Implementar autosave
+    3. Melhorar validação
+    4. Adicionar confirmação antes do envio
+
+73. CORREÇÃO DE ERROS JAVASCRIPT
+    
+    Erros Corrigidos:
+    - Bootstrap não definido
+    - Erro no focus após formatação
+    - Erro ao ler valores null
+    
+    Implementações:
+    - Ordem correta dos scripts
+    - Tratamento de erros
+    - Validações null-safe
+    - Criação dinâmica do modal
+    
+    Melhorias:
+    - Código mais robusto
+    - Melhor tratamento de erros
+    - Feedback para usuário
+    - Prevenção de crashes
+    
+    Próximos Passos:
+    1. Testar em diferentes navegadores
+    2. Adicionar loading states
+    3. Melhorar feedback de erros
+    4. Implementar autosave
+
+74. CORREÇÃO DA FORMATAÇÃO DE TEXTO
+    
+    Erro Corrigido:
+    - Função formatDoc indefinida
+    - Botões não funcionavam
+    
+    Implementações:
+    - Função formatText global
+    - Estado ativo dos botões
+    - Listeners para elementos editáveis
+    - Feedback visual da formatação
+    
+    Melhorias:
+    - Consistência na formatação
+    - Feedback visual melhorado
+    - Tratamento de foco
+    - Performance otimizada
+    
+    Próximos Passos:
+    1. Adicionar mais opções de formatação
+    2. Implementar atalhos de teclado
+    3. Melhorar feedback visual
+    4. Adicionar desfazer/refazer
+
+75. CORREÇÃO DO FORMULÁRIO DE PUBLICAÇÃO
+    
+    Erro Corrigido:
+    - Erro ao ler propriedade 'value' de null
+    - IDs inconsistentes
+    - Falta de verificação de campos
+    
+    Implementações:
+    - Verifica��ão null-safe
+    - Debug logs
+    - Valores padrão
+    - Validações robustas
+    
+    Melhorias:
+    - Tratamento de erros
+    - Feedback no console
+    - Valores fallback
+    - Verificações de segurança
+    
+    Próximos Passos:
+    1. Adicionar feedback visual
+    2. Implementar autosave
+    3. Melhorar validações
+    4. Adicionar confirmação antes do envio
+
+76. CORREÇÃO DA RENDERIZAÇÃO HTML
+    
+    Problema:
+    - Tags HTML exibidas como texto
+    - Formatação não aplicada
+    
+    Solução:
+    - Uso de strip_tags() com tags permitidas
+    - html_entity_decode() na exibição
+    - Whitelist de tags seguras
+    
+    Tags Permitidas:
+    - Título: <b>, <i>, <u>, <strong>, <em>
+    - Conteúdo: todas as tags básicas de formatação
+    
+    Próximos Passos:
+    1. Testar todas as formatações
+    2. Implementar sanitização adicional
+    3. Verificar XSS
+    4. Melhorar whitelist de tags
+
+77. CORREÇÃO DA PRESERVAÇÃO DE FORMATAÇÃO
+    
+    Problema:
+    - Formatação (negrito, etc) perdida ao salvar
+    
+    Solução:
+    - Uso de innerHTML ao invés de innerText
+    - Ampliação das tags permitidas
+    - Debug logs para rastreamento
+    - Preservação de HTML na exibição
+    
+    Melhorias:
+    - Sanitização mais permissiva
+    - Debug para rastreamento
+    - Logs de verificação
+    - Manutenção da formatação
+    
+    Próximos Passos:
+    1. Testar todas as formatações
+    2. Verificar segurança
+    3. Implementar editor WYSIWYG
+    4. Melhorar sanitização
+
+78. CORREÇÃO DA ESTILIZAÇÃO
+    
+    Problema:
+    - Estilos não sendo preservados
+    - Formatação perdida no banco
+    
+    Solução:
+    - Preservação completa do HTML
+    - Armazenamento separado dos estilos
+    - Aplicação inline dos estilos
+    - Debug em todas as etapas
+    
+    Melhorias:
+    - Não usar strip_tags
+    - Armazenar estilos separadamente
+    - Aplicar estilos na renderização
+    - Debug mais detalhado
+    
+    Próximos Passos:
+    1. Verificar segurança dos estilos
+    2. Implementar sanitização segura
+    3. Adicionar mais opções de estilo
+    4. Melhorar preview
+
+
+RESUMO DO DESENVOLVIMENTO - 21/03/2024
+-------------------------------------
+
+PRINCIPAIS IMPLEMENTAÇÕES:
+1. Modernização do Editor
+   - Interface com Bootstrap 5.3.3
+   - Sistema de CDN centralizado
+   - Layout responsivo e profissional
+   - Toolbar com formatação
+   
+2. Melhorias de UX/UI
+   - Feedback visual nas ações
+   - Loading states
+   - Tooltips e popovers
+   - Sidebar organizada
+   - Preview em modal
+
+3. Correções Críticas
+   - Formatação de texto (bold, italic, etc)
+   - Preservação de estilos
+   - Processo de publicação
+   - Tratamento de erros
+
+DESAFIOS ENFRENTADOS:
+- Perda de formatação no salvamento
+- Erros JavaScript (bootstrap undefined)
+- Problemas com submissão do formulário
+- Estilização não persistida
+
+SOLUÇÕES IMPLEMENTADAS:
+- Preservação do HTML completo
+- Correção da ordem dos scripts
+- Tratamento robusto de erros
+- Sistema de logs para debug
+
+PENDÊNCIAS:
+1. Melhorar sanitização de HTML
+2. Implementar autosave
+3. Adicionar mais opções de formatação
+4. Aprimorar feedback visual
+5. Verificar questões de segurança
+
+PRÓXIMA SESSÃO:
+- Focar na sanitização segura
+- Implementar autosave
+- Adicionar mais opções de estilo
+- Melhorar preview
